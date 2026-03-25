@@ -1,0 +1,284 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>FB DWONLOADER</title>
+
+<link rel="manifest" href="manifest.json">
+
+<style>
+
+body{
+margin:0;
+font-family:Arial;
+background:linear-gradient(135deg,#0f2027,#203a43,#2c5364);
+color:white;
+text-align:center;
+}
+
+.container{
+max-width:500px;
+margin:auto;
+padding:20px;
+}
+
+h1{color:#00ffd5;}
+
+input{
+width:95%;
+padding:15px;
+border:none;
+border-radius:10px;
+margin-top:40px;
+font-size:16px;
+}
+
+button{
+padding:12px 30px;
+margin-top:20px;
+border:none;
+border-radius:10px;
+background:#00ffd5;
+color:black;
+font-weight:bold;
+cursor:pointer;
+}
+
+.card{
+margin-top:25px;
+padding:15px;
+background:rgba(0,0,0,0.5);
+border-radius:10px;
+}
+
+video{
+width:100%;
+border-radius:10px;
+}
+
+.downloadBtn{
+display:block;
+margin:10px auto;
+padding:12px;
+background:#00ffd5;
+color:black;
+border-radius:8px;
+font-weight:bold;
+cursor:pointer;
+width:200px;
+}
+
+.historyItem{
+background:#111;
+padding:12px;
+margin:10px 0;
+border-radius:12px;
+}
+
+.loader{
+border:4px solid #ccc;
+border-top:4px solid #00ffd5;
+border-radius:50%;
+width:40px;
+height:40px;
+margin:20px auto;
+animation:spin 1s linear infinite;
+}
+
+@keyframes spin{
+100%{transform:rotate(360deg);}
+}
+
+</style>
+</head>
+
+<body>
+
+<div class="container">
+
+<h1>🔥 FB DWONLOADER</h1>
+
+<input id="url" placeholder="Paste Facebook video link">
+
+<br>
+
+<button onclick="downloadVideo()">Download</button>
+
+<div id="result"></div>
+
+<h3>📥 Total Downloads: <span id="count">0</span></h3>
+
+<h3>📜 History</h3>
+
+<div id="history"></div>
+
+</div>
+
+<script>
+
+if("serviceWorker" in navigator){
+navigator.serviceWorker.register("sw.js");
+}
+
+let count=localStorage.getItem("downloadCount")||0;
+document.getElementById("count").innerText=count;
+
+let historyList=
+JSON.parse(localStorage.getItem("downloadHistory"))||[];
+
+showHistory();
+
+async function downloadVideo(){
+
+let url=document.getElementById("url").value;
+
+if(!url){
+alert("Enter a link first!");
+return;
+}
+
+document.getElementById("result").innerHTML=
+`<div class="loader"></div>`;
+
+let api=
+"https://no-api.bbinl.site/api/facebook?url="
++encodeURIComponent(url);
+
+try{
+
+let res=await fetch(api);
+let data=await res.json();
+
+if(!data.success){
+result.innerHTML="❌ Failed!";
+return;
+}
+
+let hd=data.data.links.hd;
+let sd=data.data.links.sd;
+let title=data.data.caption||"Facebook Video";
+let thumb=data.data.thumbnail;
+
+document.getElementById("result").innerHTML=`
+
+<div class="card">
+
+<h3>${title}</h3>
+
+<video controls src="${hd}"></video>
+
+<div class="downloadBtn"
+onclick="directDownload('${hd}','${title}')">
+⬇ Download HD
+</div>
+
+<div class="downloadBtn"
+onclick="directDownload('${sd}','${title}')">
+⬇ Download SD
+</div>
+
+</div>
+`;
+
+count++;
+
+localStorage.setItem("downloadCount",count);
+
+document.getElementById("count").innerText=count;
+
+historyList.unshift({
+title:title,
+hd:hd,
+sd:sd,
+thumb:thumb
+});
+
+if(historyList.length>5){
+historyList.pop();
+}
+
+localStorage.setItem(
+"downloadHistory",
+JSON.stringify(historyList)
+);
+
+showHistory();
+
+}catch{
+
+result.innerHTML="⚠️ API Error";
+
+}
+
+}
+
+function directDownload(link,title){
+
+fetch(link)
+.then(res=>res.blob())
+.then(blob=>{
+
+let a=document.createElement("a");
+
+a.href=URL.createObjectURL(blob);
+
+a.download=
+title.replace(/[^\w\s]/gi,"")+".mp4";
+
+a.click();
+
+});
+
+}
+
+function showHistory(){
+
+let history=document.getElementById("history");
+
+history.innerHTML="";
+
+historyList.forEach(item=>{
+
+let div=document.createElement("div");
+
+div.className="historyItem";
+
+div.innerHTML=`
+
+<div style="display:flex;gap:10px;align-items:center;">
+
+<img src="${item.thumb}"
+style="width:80px;height:80px;border-radius:10px;object-fit:cover;">
+
+<div style="flex:1;text-align:left;">
+
+<b>${item.title}</b>
+
+<br>
+
+<button onclick="directDownload('${item.hd}','${item.title}')">
+HD Download
+</button>
+
+<button onclick="directDownload('${item.sd}','${item.title}')">
+SD Download
+</button>
+
+</div>
+
+</div>
+`;
+
+history.appendChild(div);
+
+});
+
+}
+
+</script>
+
+</body>
+</html>
