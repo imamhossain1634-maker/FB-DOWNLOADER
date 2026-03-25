@@ -119,13 +119,16 @@ animation:spin 1s linear infinite;
 
 <script>
 
+// Service worker
 if("serviceWorker" in navigator){
 navigator.serviceWorker.register("sw.js");
 }
 
+// Load counter
 let count=localStorage.getItem("downloadCount")||0;
 document.getElementById("count").innerText=count;
 
+// Load history
 let historyList=
 JSON.parse(localStorage.getItem("downloadHistory"))||[];
 
@@ -170,25 +173,26 @@ document.getElementById("result").innerHTML=`
 
 <video controls src="${hd}"></video>
 
-<div class="downloadBtn"
-onclick="directDownload('${hd}','${title}')">
+<a class="downloadBtn"
+href="${hd}"
+download="${title}.mp4">
 ⬇ Download HD
-</div>
+</a>
 
-<div class="downloadBtn"
-onclick="directDownload('${sd}','${title}')">
+<a class="downloadBtn"
+href="${sd}"
+download="${title}.mp4">
 ⬇ Download SD
-</div>
+</a>
 
 </div>
 `;
 
 count++;
-
 localStorage.setItem("downloadCount",count);
-
 document.getElementById("count").innerText=count;
 
+// Save history
 historyList.unshift({
 title:title,
 hd:hd,
@@ -215,24 +219,7 @@ result.innerHTML="⚠️ API Error";
 
 }
 
-function directDownload(link,title){
-
-fetch(link)
-.then(res=>res.blob())
-.then(blob=>{
-
-let a=document.createElement("a");
-
-a.href=URL.createObjectURL(blob);
-
-a.download=
-title.replace(/[^\w\s]/gi,"")+".mp4";
-
-a.click();
-
-});
-
-}
+// History show
 
 function showHistory(){
 
@@ -259,13 +246,15 @@ style="width:80px;height:80px;border-radius:10px;object-fit:cover;">
 
 <br>
 
-<button onclick="directDownload('${item.hd}','${item.title}')">
+<a href="${item.hd}"
+download="${item.title}.mp4">
 HD Download
-</button>
+</a>
 
-<button onclick="directDownload('${item.sd}','${item.title}')">
+<a href="${item.sd}"
+download="${item.title}.mp4">
 SD Download
-</button>
+</a>
 
 </div>
 
